@@ -1,4 +1,3 @@
-
 name: Deploy Flask App to AWS Lambda
 
 on:
@@ -50,3 +49,34 @@ jobs:
           aws lambda update-function-code \
             --function-name aws-cicd-platform-app \
             --zip-file fileb://deployment.zip
+
+          aws lambda wait function-updated \
+            --function-name aws-cicd-platform-app
+
+      - name: Verify live application
+        env:
+          LAMBDA_FUNCTION_URL: ${{ vars.LAMBDA_FUNCTION_URL }}
+        run: |
+          set -e
+
+          BASE_URL="${LAMBDA_FUNCTION_URL%/}"
+
+          echo "Testing home endpoint..."
+          HOME_RESPONSE=$(curl --fail --silent --show-error \
+            --retry 5 --retry-delay 3 --retry-all-errors \
+            "$BASE_URL/")
+
+          echo "$HOME_RESPONSE"
+          [[ "$HOME_RESPONSE" == *"Hello, AWS Cloud Engineer!"* ]]
+
+          echo "Testing health endpoint..."
+          HEALTH_RESPONSE=$(curl --fail --silent --show-error \
+            --retry 5 --retry-delay 3 --retry-all-errors \
+            "$BASE_URL/health")
+
+          echo "$HEALTH_RESPONSE"
+          echo "$HEALTH_RESPONSE" | python -c \
+            "import json,sys; assert json.load(sys.stdin).get('status') == 'healthy'"
+
+          echo "Both live endpoint checks passed!"
+
