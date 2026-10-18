@@ -121,6 +121,4 @@ The pipeline automatically runs application tests, authenticates with AWS using 
 - Improve deployment validation and security testing.
 - Add a documented architecture diagram and screenshots of successful workflow runs and AWS monitoring.
 
-## 👨‍💻 Author
 
-Samarth Biradar
